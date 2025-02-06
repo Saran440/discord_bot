@@ -1,13 +1,19 @@
 import discord
+from datetime import datetime  # ใช้เก็บวันที่สร้าง Task
 from discord.ext import commands
 from discord import app_commands
 from dotenv import load_dotenv
 from keep_alive import keep_alive  # Import Web Server
+import pytz
 import os
 
 # โหลดค่า TOKEN จาก .env
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
+
+# โหลดค่า Timezone จาก .env
+TIMEZONE = os.getenv("TIMEZONE", "UTC")  # ถ้าไม่มีค่าให้ใช้ UTC
+TIMEZONE_OBJ = pytz.timezone(TIMEZONE)
 
 # เปิด Intents
 intents = discord.Intents.default()
@@ -48,6 +54,16 @@ class TaskView(discord.ui.View):
             button_assign.callback = self.assign_task
             self.add_item(button_assign)
 
+            # ปุ่มลบ Task
+            button_remove = discord.ui.Button(
+                label="❌ Remove",
+                custom_id=f"remove_{idx}",
+                style=discord.ButtonStyle.danger,
+                row=idx
+            )
+            button_remove.callback = self.remove_task
+            self.add_item(button_remove)
+
     async def toggle_task(self, interaction: discord.Interaction):
         """เปลี่ยนสถานะ Task เมื่่อกดปุ่ม"""
         idx = int(interaction.data["custom_id"].split("_")[1])
@@ -64,19 +80,33 @@ class TaskView(discord.ui.View):
 
         # อัปเดต Assigned
         todo_list[idx]["assigned"] = user.id
-        todo_list[idx]["assigned_name"] = user.name
+        todo_list[idx]["assigned_name"] = user.display_name
 
         # อัปเดต UI ใหม่
         new_view = TaskView()
         await interaction.response.edit_message(embed=self.create_embed(), view=new_view)
 
+    async def remove_task(self, interaction: discord.Interaction):
+        """ลบ Task ออกจาก To-Do List"""
+        idx = int(interaction.data["custom_id"].split("_")[1])
+        removed_task = todo_list.pop(idx)  # ลบ Task ที่เลือก
+
+        if not todo_list:
+            await interaction.response.edit_message(content="📌 ไม่มีงานที่ต้องทำ!", embed=None, view=None)
+        else:
+            new_view = TaskView()
+            await interaction.response.edit_message(embed=self.create_embed(), view=new_view)
+
+        await interaction.followup.send(f"❌ ลบงาน: **{removed_task['task']}** เรียบร้อย!", ephemeral=True)
+
     def create_embed(self):
         """สร้าง Embed แสดง To-Do List"""
-        embed = discord.Embed(title="📌 To-Do List", color=discord.Color.blue())
+        embed = discord.Embed(title="⭐ To-Do List", color=discord.Color.blue())
         for idx, task in enumerate(todo_list):
             status = "✅" if task["done"] else "[ ]"
             assigned = f"📌 {task['assigned_name']}" if task["assigned"] else "⚡ *Not Assigned*"
-            embed.add_field(name=f"{idx+1}. {task['task']}", value=f"{status} {assigned}", inline=False)
+            created_at = task["created_at"]
+            embed.add_field(name=f"{idx+1}. {task['task']}", value=f"{status} {assigned}\n🕒 {created_at}", inline=False)
         return embed
 
 
@@ -94,8 +124,9 @@ async def on_ready():
 async def add_task(interaction: discord.Interaction, task: str):
     """เพิ่ม Task ใหม่"""
     await interaction.response.defer()
-    todo_list.append({"task": task, "assigned": None, "assigned_name": None, "done": False})
-    await interaction.followup.send(f"✅ เพิ่มงาน: **{task}** เรียบร้อย!")
+    created_at = datetime.now(TIMEZONE_OBJ).strftime("%Y-%m-%d %H:%M")  # เวลาสร้าง Task
+    todo_list.append({"task": task, "assigned": None, "assigned_name": None, "done": False, "created_at": created_at})
+    await interaction.followup.send(f"✅ เพิ่มงาน: **{task}** (🕒 {created_at}) เรียบร้อย!")
 
 
 @bot.tree.command(name="show_tasks", description="แสดงรายการงานที่ค้างอยู่")
@@ -111,10 +142,11 @@ async def show_tasks(interaction: discord.Interaction):
 @bot.event
 async def on_message(message):
     # เช็คถ้าข้อความมาจาก API
-    if message.author == bot.user and message.content.startswith("BOT_API: "):
-        task = message.content.replace("BOT_API: ", "").strip()
-        todo_list.append({"task": task, "assigned": None, "done": False})
-        await message.channel.send(f"✅ เพิ่มงาน: **{task}** เรียบร้อย!")
+    if message.content == "📩 **คุณได้รับอีเมลใหม่!**":
+        task = message.embeds[0].title
+        created_at = datetime.now(TIMEZONE_OBJ).strftime("%Y-%m-%d %H:%M")  # เวลาสร้าง Task
+        todo_list.append({"task": task, "assigned": None, "done": False, "created_at": created_at})
+        await message.channel.send(f"✅ เพิ่มงาน: **{task}** (🕒 {created_at}) เรียบร้อย!")
         return  # ไม่ให้ Bot ตอบตัวเอง 
 
     await bot.process_commands(message)
