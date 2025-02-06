@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 from dotenv import load_dotenv
+from keep_alive import keep_alive  # Import Web Server
 import os
 
 # โหลดค่า TOKEN จาก .env
@@ -107,5 +108,5 @@ async def show_tasks(interaction: discord.Interaction):
         embed = TaskView().create_embed()
         await interaction.followup.send(embed=embed, view=TaskView())
 
-
+keep_alive()
 bot.run(TOKEN)
