@@ -110,14 +110,12 @@ async def show_tasks(interaction: discord.Interaction):
 
 @bot.event
 async def on_message(message):
-    if message.author == bot.user:
-        return  # ไม่ให้ Bot ตอบตัวเอง
-
     # เช็คถ้าข้อความมาจาก API
-    if message.content.startswith("BOT_API: "):  
+    if message.author == bot.user and message.content.startswith("BOT_API: "):
         task = message.content.replace("BOT_API: ", "").strip()
         todo_list.append({"task": task, "assigned": None, "done": False})
         await message.channel.send(f"✅ เพิ่มงาน: **{task}** เรียบร้อย!")
+        return  # ไม่ให้ Bot ตอบตัวเอง 
 
     await bot.process_commands(message)
 
