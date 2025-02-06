@@ -31,11 +31,12 @@ This is a Discord bot application. Follow the instructions below to run the app 
 4. Run the Docker container:
 
     ```sh
-    docker run --rm --name discord_bot discord_bot -d
+    docker run --rm --name discord_bot -d discord_bot
     ```
 
 ## Stopping the App
 
+In case you run Docker without -d
 To stop the Docker container, press `Ctrl+C` in the terminal where the container is running.
 
 ## License
