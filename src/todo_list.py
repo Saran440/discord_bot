@@ -145,7 +145,8 @@ async def on_message(message):
     if message.content == "📩 **คุณได้รับอีเมลใหม่!**":
         task = message.embeds[0].title
         created_at = datetime.now(TIMEZONE_OBJ).strftime("%Y-%m-%d %H:%M")  # เวลาสร้าง Task
-        todo_list.append({"task": task, "assigned": None, "done": False, "created_at": created_at})
+        # Task limit 80 character
+        todo_list.append({"task": task[:80], "assigned": None, "done": False, "created_at": created_at})
         await message.channel.send(f"✅ เพิ่มงาน: **{task}** (🕒 {created_at}) เรียบร้อย!")
         return  # ไม่ให้ Bot ตอบตัวเอง 
 
