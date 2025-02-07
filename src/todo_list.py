@@ -3,7 +3,7 @@ from datetime import datetime  # ใช้เก็บวันที่สร�
 from discord.ext import commands
 from discord import app_commands
 from dotenv import load_dotenv
-from keep_alive import keep_alive  # Import Web Server
+# from keep_alive import keep_alive  # Import Web Server
 import pytz
 import os
 
@@ -13,6 +13,7 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 
 # โหลดค่า Timezone จาก .env
 TIMEZONE = os.getenv("TIMEZONE", "UTC")  # ถ้าไม่มีค่าให้ใช้ UTC
+print(f"⏰ Timezone: {TIMEZONE}")
 TIMEZONE_OBJ = pytz.timezone(TIMEZONE)
 
 # เปิด Intents
@@ -152,5 +153,5 @@ async def on_message(message):
 
     await bot.process_commands(message)
 
-keep_alive()
+# keep_alive()
 bot.run(TOKEN)
