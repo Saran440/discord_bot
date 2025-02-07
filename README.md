@@ -15,17 +15,17 @@ This is a Discord bot application. Follow the instructions below to run the app 
     cd discord_bot
     ```
 
-2. Build the Docker image:
-
-    ```sh
-    docker build -t discord_bot .
-    ```
-
-3. Create a `.env` file in the root directory and add your environment variables:
+2. Create a `.env` file in the root directory and add your environment variables:
 
     ```env
     DISCORD_TOKEN=your_discord_token
-    TIMEZONE="YOUR_TIMEZONE" # For example "Asia/Bangkok
+    TIMEZONE="YOUR_TIMEZONE" # For example "Asia/Bangkok"
+    ```
+
+3. Build the Docker image:
+
+    ```sh
+    docker build -t discord_bot .
     ```
 
 4. Run the Docker container:

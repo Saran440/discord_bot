@@ -3,7 +3,6 @@ from datetime import datetime  # ใช้เก็บวันที่สร�
 from discord.ext import commands
 from discord import app_commands
 from dotenv import load_dotenv
-# from keep_alive import keep_alive  # Import Web Server
 import pytz
 import os
 
@@ -153,5 +152,4 @@ async def on_message(message):
 
     await bot.process_commands(message)
 
-# keep_alive()
 bot.run(TOKEN)
