@@ -47,9 +47,8 @@ This is a Discord bot application. Follow the instructions below to run the app 
 If you run Docker without -d (detached mode), you can stop the bot using `Ctrl+C` in the terminal.
 If running in detached mode, use:
 
-    ```sh
     docker stop discord_bot
-    ```
+
 
 ## Task Commands
 
