@@ -6,7 +6,7 @@ class TaskDropdown(discord.ui.Select):
     def __init__(self, tasks):
         self.tasks = tasks
         options = [
-            discord.SelectOption(label=f"{idx+1}. {(task["task"][:90] + "...") if len(task["task"]) > 100 else task["task"]}", value=str(task["id"]))
+            discord.SelectOption(label=f"{idx+1}. {(task['task'][:90] + '...') if len(task['task']) > 100 else task['task']}", value=str(task["id"]))
 
             for idx, task in enumerate(tasks)
         ]
