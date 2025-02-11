@@ -19,6 +19,7 @@ def init_db():
     """)
     conn.commit()
     conn.close()
+    print("✅ Database initialized!")
 
 def add_task(channel_id, task, created_at):
     """เพิ่ม Task ลงในฐานข้อมูล"""
