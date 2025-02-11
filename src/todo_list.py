@@ -39,8 +39,9 @@ async def on_message(message):
         
         # สร้าง Embed และอัปเดต To-Do List
         if tasks:
-            embed = TaskView.create_embed(tasks)
-            await message.channel.send(embed=embed, view=TaskView(tasks))
+            embeds = TaskView.create_embeds(tasks)
+            for embed in embeds:
+                await message.channel.send(embed=embed, view=TaskView(tasks))
 
         return  # ไม่ให้ Bot ตอบตัวเอง 
 
