@@ -2,3 +2,6 @@ discord.py
 python-dotenv
 flask
 pytz
+yt_dlp
+asyncio
+pynacl

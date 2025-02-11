@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 5000
 
 # Define the command to run the application
-CMD ["python3", "src/todo_list.py", "--host=0.0.0.0"]
+CMD ["python3", "src/bot.py", "--host=0.0.0.0"]
