@@ -6,7 +6,7 @@ import os
 from datetime import datetime
 
 # Import คำสั่งที่แยกไว้
-from commands import TaskGroup
+from commands import TaskGroup, MusicBot
 from models import init_db, add_task, get_tasks
 from utils.config import TOKEN, INTENTS, TIMEZONE_OBJ
 from views import TaskView
@@ -20,6 +20,9 @@ bot = commands.Bot(command_prefix="!", intents=INTENTS)
 @bot.event
 async def on_ready():
     init_db()  # สร้างฐานข้อมูลถ้ายังไม่มี
+    # bot.add_cog(MusicBot(bot))  # ✅ เพิ่ม MusicBot cog
+    # bot.tree.add_command(MusicBot())  # เพิ่มคำสั่ง /task
+    await bot.add_cog(MusicBot(bot))
     bot.tree.add_command(TaskGroup())  # เพิ่มคำสั่ง /task
     await bot.tree.sync()
     print(f"✅ Logged in as {bot.user}")

@@ -24,7 +24,7 @@ class TaskGroup(app_commands.Group):
         await self.update_task_list(interaction, f"✅ Task added: **{task}**")
 
     @app_commands.command(name="clear", description="Clear a specific task")
-    async def clear_task(self, interaction: discord.Interaction, task_ref: str):
+    async def clear_task(self, interaction: discord.Interaction, task_ref: int):
         """Clear a Task"""
         await interaction.response.defer()
         tasks = get_tasks(interaction.channel.id)
