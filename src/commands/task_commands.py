@@ -24,15 +24,15 @@ class TaskGroup(app_commands.Group):
         await self.update_task_list(interaction, f"✅ Task added: **{task}**")
 
     @app_commands.command(name="clear", description="Clear a specific task")
-    async def clear_task(self, interaction: discord.Interaction, task_name: str):
+    async def clear_task(self, interaction: discord.Interaction, task_ref: str):
         """Clear a Task"""
         await interaction.response.defer()
         tasks = get_tasks(interaction.channel.id)
-        task_to_clear = next((task for task in tasks if task["task"] == task_name), None)
+        task_to_clear = next((task for task in tasks if task["id"] == task_ref), None)
 
         if task_to_clear:
             delete_task(task_to_clear["id"])
-            await self.update_task_list(interaction, f"🗑 Task removed: **{task_name}**")
+            await self.update_task_list(interaction, f"🗑 Task removed: **#{task_ref}**")
         else:
             await interaction.followup.send("⚠️ Task not found!", ephemeral=True)
 
@@ -43,19 +43,20 @@ class TaskGroup(app_commands.Group):
         tasks = get_tasks(interaction.channel.id)
 
         if assigned_to:
-            filtered_tasks = [task for task in tasks if task["assigned"] == assigned_to.id]
-            if filtered_tasks:
-                embed = TaskView.create_embed(filtered_tasks)
-                await interaction.followup.send(embed=embed, view=TaskView(filtered_tasks))
-            else:
-                await interaction.followup.send(f"⚠️ No tasks assigned to {assigned_to.mention}", ephemeral=True)
-        else:
-            if not tasks:
-                await interaction.followup.send("📌 No tasks available!", ephemeral=True)
-                return
-            
-            embed = TaskView.create_embed(tasks)
-            await interaction.followup.send(embed=embed, view=TaskView(tasks))
+            tasks = [task for task in tasks if task["assigned"] == assigned_to.id]
+
+        if not tasks:
+            await interaction.followup.send("📌 No tasks available!", ephemeral=True)
+            return
+
+        embeds = TaskView.create_embeds(tasks)
+
+        # ✅ ส่ง Embed ปกติ (ไม่มีปุ่ม)
+        for embed in embeds[:-1]:  # ส่งทุกอัน **ยกเว้นอันสุดท้าย**
+            await interaction.followup.send(embed=embed)
+
+        # ✅ ส่ง Embed สุดท้ายพร้อมปุ่ม
+        await interaction.followup.send(embed=embeds[-1], view=TaskView(tasks))
 
     @app_commands.command(name="assign", description="Assign or remove assignment from a task")
     async def assign_task_command(self, interaction: discord.Interaction, task_index: int, user: discord.Member = None):
@@ -87,7 +88,10 @@ class TaskGroup(app_commands.Group):
         if not tasks:
             await interaction.followup.send("📌 No tasks available!", ephemeral=True)
             return
-        embed = TaskView.create_embed(tasks)
-        response = await interaction.followup.send(embed=embed, view=TaskView(tasks))
+
+        embeds = TaskView.create_embeds(tasks)
+        for embed in embeds:
+            await interaction.followup.send(embed=embed, view=TaskView(tasks))
+
         if message:
             await interaction.channel.send(message)
