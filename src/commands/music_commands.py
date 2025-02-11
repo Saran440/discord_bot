@@ -1,6 +1,8 @@
 import discord
 import yt_dlp
 import asyncio
+import requests
+
 from discord import app_commands
 from discord.ext import commands
 
@@ -25,17 +27,21 @@ class MusicBot(commands.Cog):
         return voice_client
 
     def search_youtube(self, query):
-        ydl_opts = {
-            'format': 'bestaudio/best',
-            'noplaylist': True,
-            'default_search': 'ytsearch1',
-            'quiet': True
-        }
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(query, download=False)
-            if 'entries' in info:
-                info = info['entries'][0]
-            return info['url'], info['title']
+        try:
+            # ใช้ API Proxy แทน YouTube โดยตรง
+            api_url = f"https://invidious.snopyta.org/api/v1/search?q={query}&type=video"
+            response = requests.get(api_url)
+            results = response.json()
+
+            if results:
+                video_id = results[0]["videoId"]
+                title = results[0]["title"]
+                return f"https://www.youtube.com/watch?v={video_id}", title
+            else:
+                return None, None
+        except Exception as e:
+            print(f"Error searching YouTube: {e}")
+            return None, None
 
     async def play_next(self, interaction):
         if interaction.guild.id in self.queues and self.queues[interaction.guild.id]:
@@ -51,27 +57,26 @@ class MusicBot(commands.Cog):
 
     @app_commands.command(name="song", description="Play a song from YouTube")
     async def play_song(self, interaction: discord.Interaction, search: str):
-        """Search and play a song from YouTube"""
-        await interaction.response.defer()
-
+        """Search and play a song in a voice channel"""
+        await interaction.response.defer()  # ✅ ป้องกันการตอบกลับซ้ำ
+        
         voice_client = await self.join_voice_channel(interaction)
         if not voice_client:
+            await interaction.followup.send("❌ You must be in a voice channel!", ephemeral=True)
             return
 
         url, title = self.search_youtube(search)
-        if not url:
-            await interaction.followup.send("❌ Could not find the song.")
-            return
 
-        if interaction.guild_id not in self.queues:
-            self.queues[interaction.guild_id] = []
+        if interaction.guild.id not in self.queues:
+            self.queues[interaction.guild.id] = []
 
-        self.queues[interaction.guild_id].append((url, title))
-
-        if not voice_client.is_playing():
-            await self.play_next(interaction)
-        else:
+        if voice_client.is_playing() or voice_client.is_paused():
+            self.queues[interaction.guild.id].append((url, title))
             await interaction.followup.send(f'🎵 Added to queue: **{title}**')
+        else:
+            self.queues[interaction.guild.id].append((url, title))
+            await interaction.followup.send(f'🎶 Now playing: **{title}**')
+            await self.play_next(interaction)
 
     @app_commands.command(name="song_end", description="Stop the current song and clear the queue")
     async def stop_song(self, interaction: discord.Interaction):
